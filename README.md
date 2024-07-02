@@ -10,4 +10,4 @@ Join our Telegram group to stay updated and get instructions on how to use this 
 
 ### Note
 
-Put your Telegram ID into the `data.txt` file
+Put your `Telegram ID` or `query_id=`  or `user=` into the `data` file
