@@ -223,7 +223,7 @@ class ArenaGames:
                 # Get user info
                 try:
                     user_info = self.user_info(telegram_id=telegram_id).json()
-                    user_name = user_info["data"]["username"]
+                    user_name = user_info["data"]["first_name"]
                     balance = user_info["data"]["balance"]["$numberDecimal"]
                     end_at = float(user_info["data"]["farmEnd"]) / 1000
                     readable_time = datetime.fromtimestamp(end_at).strftime(
