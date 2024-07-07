@@ -62,7 +62,7 @@ class ArenaGames:
         }
 
     def proxies(self, proxy_info):
-        return {"http": f"{proxy_info}"}
+        return {"http": f"{proxy_info}", "https": f"{proxy_info}"}
 
     def user_info(self, telegram_id, proxy_info):
         url = "https://bot.arenavs.com/v1/profile"
