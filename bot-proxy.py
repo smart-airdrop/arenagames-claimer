@@ -378,8 +378,8 @@ class ArenaGames:
                         telegram_id=telegram_id, proxy_info=proxy_info
                     ).json()
                     ref_coin = check_ref_coin["data"]["allCoin"]["$numberDecimal"]
-                    if int(ref_coin) > 0:
-                        self.log(f"{yellow}Getting {int(ref_coin)} XP from refs...")
+                    if float(ref_coin) > 0:
+                        self.log(f"{yellow}Getting {round(float(ref_coin), 2)} XP from refs...")
                         get_ref_coin = self.get_ref_coin(
                             telegram_id=telegram_id, proxy_info=proxy_info
                         ).json()
