@@ -280,13 +280,13 @@ class ArenaGames:
         return user_id
 
     def main(self):
-        self.clear_terminal()
-        print(self.banner)
-        accounts = json.load(open(data_file, "r"))["accounts"]
-        num_acc = len(accounts)
-        self.log(self.line)
-        self.log(f"{green}Numer of account: {white}{num_acc}")
         while True:
+            self.clear_terminal()
+            print(self.banner)
+            accounts = json.load(open(data_file, "r"))["accounts"]
+            num_acc = len(accounts)
+            self.log(self.line)
+            self.log(f"{green}Numer of account: {white}{num_acc}")
             end_at_list = []
             for no, account in enumerate(accounts):
                 self.log(self.line)
