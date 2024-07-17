@@ -2,10 +2,13 @@ import os
 import sys
 import time
 import requests
+from requests.auth import HTTPProxyAuth
 from colorama import *
 from datetime import datetime
 import random
 import json
+import brotli
+import urllib.parse
 
 red = Fore.LIGHTRED_EX
 yellow = Fore.LIGHTYELLOW_EX
@@ -41,12 +44,12 @@ class ArenaGames:
         else:
             _ = os.system("clear")
 
-    def headers(self, telegram_id):
+    def headers(self, data):
         return {
             "Accept": "application/json, text/plain, */*",
             "Accept-Encoding": "gzip, deflate, br, zstd",
             "Accept-Language": "en-US,en;q=0.9",
-            "At": f"{telegram_id}",
+            "At": f"{self.get_id(data)}",
             "Cache-Control": "no-cache",
             "Origin": "https://bot-coin.arenavs.com",
             "Pragma": "no-cache",
@@ -58,16 +61,39 @@ class ArenaGames:
             "Sec-Fetch-Dest": "empty",
             "Sec-Fetch-Mode": "cors",
             "Sec-Fetch-Site": "same-site",
+            "Tg": f"{data}",
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
         }
 
     def proxies(self, proxy_info):
         return {"http": f"{proxy_info}", "https": f"{proxy_info}"}
 
-    def user_info(self, telegram_id, proxy_info):
+    def check_ip(self, proxy_info):
+        url = "https://api.ipify.org?format=json"
+
+        proxies = self.proxies(proxy_info=proxy_info)
+
+        # Parse the proxy credentials if present
+        if "@" in proxy_info:
+            proxy_credentials = proxy_info.split("@")[0]
+            proxy_user = proxy_credentials.split(":")[1]
+            proxy_pass = proxy_credentials.split(":")[2]
+            auth = HTTPProxyAuth(proxy_user, proxy_pass)
+        else:
+            auth = None
+
+        try:
+            response = requests.get(url=url, proxies=proxies, auth=auth)
+            response.raise_for_status()  # Raises an error for bad status codes
+            return response.json().get("ip")
+        except requests.exceptions.RequestException as e:
+            print(f"IP check failed: {e}")
+            return None
+
+    def user_info(self, data, proxy_info):
         url = "https://bot.arenavs.com/v1/profile"
 
-        headers = self.headers(telegram_id=telegram_id)
+        headers = self.headers(data=data)
 
         proxies = self.proxies(proxy_info=proxy_info)
 
@@ -75,10 +101,10 @@ class ArenaGames:
 
         return response
 
-    def get_task(self, telegram_id, proxy_info):
+    def get_task(self, data, proxy_info):
         url = "https://bot.arenavs.com/v1/profile/tasks?page=1&limit=20"
 
-        headers = self.headers(telegram_id=telegram_id)
+        headers = self.headers(data=data)
 
         proxies = self.proxies(proxy_info=proxy_info)
 
@@ -86,10 +112,10 @@ class ArenaGames:
 
         return response
 
-    def do_task(self, telegram_id, task_id, proxy_info):
+    def do_task(self, data, task_id, proxy_info):
         url = f"https://bot.arenavs.com/v1/profile/tasks/{task_id}"
 
-        headers = self.headers(telegram_id=telegram_id)
+        headers = self.headers(data=data)
 
         proxies = self.proxies(proxy_info=proxy_info)
 
@@ -97,10 +123,10 @@ class ArenaGames:
 
         return response
 
-    def claim_task(self, telegram_id, task_id, proxy_info):
+    def claim_task(self, data, task_id, proxy_info):
         url = f"https://bot.arenavs.com/v1/profile/tasks/{task_id}/claim"
 
-        headers = self.headers(telegram_id=telegram_id)
+        headers = self.headers(data=data)
 
         proxies = self.proxies(proxy_info=proxy_info)
 
@@ -108,10 +134,10 @@ class ArenaGames:
 
         return response
 
-    def check_status(self, telegram_id, proxy_info):
+    def check_status(self, data, proxy_info):
         url = "https://bot.arenavs.com/v1/profile/exp-farm-coin"
 
-        headers = self.headers(telegram_id=telegram_id)
+        headers = self.headers(data=data)
 
         proxies = self.proxies(proxy_info=proxy_info)
 
@@ -119,10 +145,10 @@ class ArenaGames:
 
         return response
 
-    def farm_coin(self, telegram_id, proxy_info):
+    def farm_coin(self, data, proxy_info):
         url = "https://bot.arenavs.com/v1/profile/farm-coin"
 
-        headers = self.headers(telegram_id=telegram_id)
+        headers = self.headers(data=data)
 
         proxies = self.proxies(proxy_info=proxy_info)
 
@@ -130,10 +156,10 @@ class ArenaGames:
 
         return response
 
-    def check_ref_coin(self, telegram_id, proxy_info):
+    def check_ref_coin(self, data, proxy_info):
         url = "https://bot.arenavs.com/v1/profile/refs/coin"
 
-        headers = self.headers(telegram_id=telegram_id)
+        headers = self.headers(data=data)
 
         proxies = self.proxies(proxy_info=proxy_info)
 
@@ -141,10 +167,10 @@ class ArenaGames:
 
         return response
 
-    def get_ref_coin(self, telegram_id, proxy_info):
+    def get_ref_coin(self, data, proxy_info):
         url = "https://bot.arenavs.com/v1/profile/get-ref-coin"
 
-        headers = self.headers(telegram_id=telegram_id)
+        headers = self.headers(data=data)
 
         proxies = self.proxies(proxy_info=proxy_info)
 
@@ -152,10 +178,10 @@ class ArenaGames:
 
         return response
 
-    def attempts_left(self, telegram_id, proxy_info):
+    def attempts_left(self, data, proxy_info):
         url = "https://bot.arenavs.com/v1/game/attempts-left"
 
-        headers = self.headers(telegram_id=telegram_id)
+        headers = self.headers(data=data)
 
         proxies = self.proxies(proxy_info=proxy_info)
 
@@ -163,10 +189,10 @@ class ArenaGames:
 
         return response
 
-    def start_game(self, telegram_id, proxy_info):
+    def start_game(self, data, proxy_info):
         url = "https://bot.arenavs.com/v1/game/start"
 
-        headers = self.headers(telegram_id=telegram_id)
+        headers = self.headers(data=data)
 
         proxies = self.proxies(proxy_info=proxy_info)
 
@@ -174,10 +200,10 @@ class ArenaGames:
 
         return response
 
-    def stop_game(self, telegram_id, proxy_info):
+    def stop_game(self, data, proxy_info):
         url = "https://bot.arenavs.com/v1/game/stop"
 
-        headers = self.headers(telegram_id=telegram_id)
+        headers = self.headers(data=data)
 
         xp = random.randint(500, 800)
         height = random.randint(15, 25)
@@ -201,19 +227,15 @@ class ArenaGames:
 
         return response, xp
 
-    def play_game(self, telegram_id, proxy_info):
+    def play_game(self, data, proxy_info):
         self.log(f"{yellow}Playing game...")
-        start_game = self.start_game(
-            telegram_id=telegram_id, proxy_info=proxy_info
-        ).json()
+        start_game = self.start_game(data=data, proxy_info=proxy_info).json()
         try:
             start_status = start_game["data"]["status"]
             if start_status:
                 self.log(f"{white}Play for 60 seconds")
                 time.sleep(60)
-                stop_game, xp = self.stop_game(
-                    telegram_id=telegram_id, proxy_info=proxy_info
-                )
+                stop_game, xp = self.stop_game(data=data, proxy_info=proxy_info)
                 stop_status = stop_game.json()["data"]["status"]
                 if stop_status:
                     self.log(f"{green}XP earned from Game: {yellow}{xp}")
@@ -224,9 +246,7 @@ class ArenaGames:
                 self.log(f"{red}Start game failed")
                 return False
         except:
-            stop_game, xp = self.stop_game(
-                telegram_id=telegram_id, proxy_info=proxy_info
-            )
+            stop_game, xp = self.stop_game(data=data, proxy_info=proxy_info)
             stop_status = stop_game.json()["data"]["status"]
             if stop_status:
                 self.log(f"{green}XP earned from Game: {yellow}{xp}")
@@ -248,6 +268,17 @@ class ArenaGames:
         except:
             return None
 
+    def get_id(self, query_id):
+        parsed_query = urllib.parse.parse_qs(query_id)
+
+        user_info = urllib.parse.unquote(parsed_query["user"][0])
+
+        user_dict = json.loads(user_info)
+
+        user_id = user_dict["id"]
+
+        return user_id
+
     def main(self):
         self.clear_terminal()
         print(self.banner)
@@ -260,7 +291,7 @@ class ArenaGames:
             for no, account in enumerate(accounts):
                 self.log(self.line)
                 self.log(f"{green}Account number: {white}{no+1}/{num_acc}")
-                telegram_id = account["acc_info"]
+                data = account["acc_info"]
                 proxy_info = account["proxy_info"]
                 parsed_proxy_info = self.parse_proxy_info(proxy_info)
                 if parsed_proxy_info is None:
@@ -269,14 +300,15 @@ class ArenaGames:
                     )
                     break
                 ip_adress = parsed_proxy_info["ip"]
-                self.log(f"{green}IP Address: {white}{ip_adress}")
+                self.log(f"{green}Input IP Address: {white}{ip_adress}")
+
+                ip = self.check_ip(proxy_info=proxy_info)
+                self.log(f"{green}Actual IP Address: {white}{ip}")
 
                 # Get user info
                 try:
-                    user_info = self.user_info(
-                        telegram_id=telegram_id, proxy_info=proxy_info
-                    ).json()
-                    user_name = user_info["data"]["first_name"]
+                    user_info = self.user_info(data=data, proxy_info=proxy_info).json()
+                    user_name = user_info["data"]["username"]
                     balance = user_info["data"]["balance"]["$numberDecimal"]
                     end_at = float(user_info["data"]["farmEnd"]) / 1000
                     readable_time = datetime.fromtimestamp(end_at).strftime(
@@ -291,9 +323,7 @@ class ArenaGames:
 
                 # Do tasks
                 try:
-                    get_task = self.get_task(
-                        telegram_id=telegram_id, proxy_info=proxy_info
-                    ).json()
+                    get_task = self.get_task(data=data, proxy_info=proxy_info).json()
                     tasks = get_task["data"]["docs"]
                     task_info = [
                         {
@@ -312,7 +342,7 @@ class ArenaGames:
                             task_id = task["task_id"]
                             task_name = task["task_name"]
                             result = self.do_task(
-                                telegram_id=telegram_id,
+                                data=data,
                                 task_id=task_id,
                                 proxy_info=proxy_info,
                             ).json()["data"]["status"]
@@ -328,7 +358,7 @@ class ArenaGames:
                             task_id = task["task_id"]
                             task_name = task["task_name"]
                             result = self.claim_task(
-                                telegram_id=telegram_id,
+                                data=data,
                                 task_id=task_id,
                                 proxy_info=proxy_info,
                             ).json()["data"]["status"]
@@ -350,9 +380,7 @@ class ArenaGames:
                 # Farm coin
                 try:
                     self.log(f"{yellow}Trying to farm coin...")
-                    farm_coin = self.farm_coin(
-                        telegram_id=telegram_id, proxy_info=proxy_info
-                    )
+                    farm_coin = self.farm_coin(data=data, proxy_info=proxy_info)
                     try:
                         if farm_coin.json()["statusCode"] == 400:
                             self.log(f"{yellow}Farm too early!")
@@ -361,9 +389,7 @@ class ArenaGames:
                     except:
                         pass
 
-                    user_info = self.user_info(
-                        telegram_id=telegram_id, proxy_info=proxy_info
-                    ).json()
+                    user_info = self.user_info(data=data, proxy_info=proxy_info).json()
                     balance = user_info["data"]["balance"]["$numberDecimal"]
                     self.log(
                         f"{green}Current balance: {white}{round(float(balance), 2)}"
@@ -375,13 +401,15 @@ class ArenaGames:
                 try:
                     self.log(f"{yellow}Checking coin from refs...")
                     check_ref_coin = self.check_ref_coin(
-                        telegram_id=telegram_id, proxy_info=proxy_info
+                        data=data, proxy_info=proxy_info
                     ).json()
                     ref_coin = check_ref_coin["data"]["allCoin"]["$numberDecimal"]
                     if float(ref_coin) > 0:
-                        self.log(f"{yellow}Getting {round(float(ref_coin), 2)} XP from refs...")
+                        self.log(
+                            f"{yellow}Getting {round(float(ref_coin), 2)} XP from refs..."
+                        )
                         get_ref_coin = self.get_ref_coin(
-                            telegram_id=telegram_id, proxy_info=proxy_info
+                            data=data, proxy_info=proxy_info
                         ).json()
                         balance = get_ref_coin["data"]["balance"]["$numberDecimal"]
                         self.log(
@@ -396,16 +424,14 @@ class ArenaGames:
                 try:
                     while True:
                         attempts_left = self.attempts_left(
-                            telegram_id=telegram_id, proxy_info=proxy_info
+                            data=data, proxy_info=proxy_info
                         ).json()
                         game_left = attempts_left["data"]["quantity"]
                         self.log(f"{green}Game tickets: {white}{game_left}")
                         if int(game_left) > 0:
-                            self.play_game(
-                                telegram_id=telegram_id, proxy_info=proxy_info
-                            )
+                            self.play_game(data=data, proxy_info=proxy_info)
                             user_info = self.user_info(
-                                telegram_id=telegram_id, proxy_info=proxy_info
+                                data=data, proxy_info=proxy_info
                             ).json()
                             balance = user_info["data"]["balance"]["$numberDecimal"]
                             self.log(
