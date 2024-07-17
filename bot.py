@@ -6,6 +6,8 @@ from colorama import *
 from datetime import datetime
 import random
 import json
+import brotli
+import urllib.parse
 
 red = Fore.LIGHTRED_EX
 yellow = Fore.LIGHTYELLOW_EX
@@ -41,12 +43,12 @@ class ArenaGames:
         else:
             _ = os.system("clear")
 
-    def headers(self, telegram_id):
+    def headers(self, data):
         return {
             "Accept": "application/json, text/plain, */*",
             "Accept-Encoding": "gzip, deflate, br, zstd",
             "Accept-Language": "en-US,en;q=0.9",
-            "At": f"{telegram_id}",
+            "At": f"{self.get_id(data)}",
             "Cache-Control": "no-cache",
             "Origin": "https://bot-coin.arenavs.com",
             "Pragma": "no-cache",
@@ -58,103 +60,104 @@ class ArenaGames:
             "Sec-Fetch-Dest": "empty",
             "Sec-Fetch-Mode": "cors",
             "Sec-Fetch-Site": "same-site",
+            "Tg": f"{data}",
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
         }
 
-    def user_info(self, telegram_id):
+    def user_info(self, data):
         url = "https://bot.arenavs.com/v1/profile"
 
-        headers = self.headers(telegram_id=telegram_id)
+        headers = self.headers(data=data)
 
         response = requests.get(url=url, headers=headers)
 
         return response
 
-    def get_task(self, telegram_id):
+    def get_task(self, data):
         url = "https://bot.arenavs.com/v1/profile/tasks?page=1&limit=20"
 
-        headers = self.headers(telegram_id=telegram_id)
+        headers = self.headers(data=data)
 
         response = requests.get(url=url, headers=headers)
 
         return response
 
-    def do_task(self, telegram_id, task_id):
+    def do_task(self, data, task_id):
         url = f"https://bot.arenavs.com/v1/profile/tasks/{task_id}"
 
-        headers = self.headers(telegram_id=telegram_id)
+        headers = self.headers(data=data)
 
         response = requests.post(url=url, headers=headers)
 
         return response
 
-    def claim_task(self, telegram_id, task_id):
+    def claim_task(self, data, task_id):
         url = f"https://bot.arenavs.com/v1/profile/tasks/{task_id}/claim"
 
-        headers = self.headers(telegram_id=telegram_id)
+        headers = self.headers(data=data)
 
         response = requests.post(url=url, headers=headers)
 
         return response
 
-    def check_status(self, telegram_id):
+    def check_status(self, data):
         url = "https://bot.arenavs.com/v1/profile/exp-farm-coin"
 
-        headers = self.headers(telegram_id=telegram_id)
+        headers = self.headers(data=data)
 
         response = requests.get(url=url, headers=headers)
 
         return response
 
-    def farm_coin(self, telegram_id):
+    def farm_coin(self, data):
         url = "https://bot.arenavs.com/v1/profile/farm-coin"
 
-        headers = self.headers(telegram_id=telegram_id)
+        headers = self.headers(data=data)
 
         response = requests.post(url=url, headers=headers)
 
         return response
 
-    def check_ref_coin(self, telegram_id):
+    def check_ref_coin(self, data):
         url = "https://bot.arenavs.com/v1/profile/refs/coin"
 
-        headers = self.headers(telegram_id=telegram_id)
+        headers = self.headers(data=data)
 
         response = requests.get(url=url, headers=headers)
 
         return response
 
-    def get_ref_coin(self, telegram_id):
+    def get_ref_coin(self, data):
         url = "https://bot.arenavs.com/v1/profile/get-ref-coin"
 
-        headers = self.headers(telegram_id=telegram_id)
+        headers = self.headers(data=data)
 
         response = requests.post(url=url, headers=headers)
 
         return response
 
-    def attempts_left(self, telegram_id):
+    def attempts_left(self, data):
         url = "https://bot.arenavs.com/v1/game/attempts-left"
 
-        headers = self.headers(telegram_id=telegram_id)
+        headers = self.headers(data=data)
 
         response = requests.get(url=url, headers=headers)
 
         return response
 
-    def start_game(self, telegram_id):
+    def start_game(self, data):
         url = "https://bot.arenavs.com/v1/game/start"
 
-        headers = self.headers(telegram_id=telegram_id)
+        headers = self.headers(data=data)
 
         response = requests.post(url=url, headers=headers)
 
         return response
 
-    def stop_game(self, telegram_id):
+    def stop_game(self, data):
         url = "https://bot.arenavs.com/v1/game/stop"
 
-        headers = self.headers(telegram_id=telegram_id)
+        headers = self.headers(data=data)
 
         xp = random.randint(500, 800)
         height = random.randint(15, 25)
@@ -176,15 +179,15 @@ class ArenaGames:
 
         return response, xp
 
-    def play_game(self, telegram_id):
+    def play_game(self, data):
         self.log(f"{yellow}Playing game...")
-        start_game = self.start_game(telegram_id=telegram_id).json()
+        start_game = self.start_game(data=data).json()
         try:
             start_status = start_game["data"]["status"]
             if start_status:
                 self.log(f"{white}Play for 60 seconds")
                 time.sleep(60)
-                stop_game, xp = self.stop_game(telegram_id=telegram_id)
+                stop_game, xp = self.stop_game(data=data)
                 stop_status = stop_game.json()["data"]["status"]
                 if stop_status:
                     self.log(f"{green}XP earned from Game: {yellow}{xp}")
@@ -195,7 +198,7 @@ class ArenaGames:
                 self.log(f"{red}Start game failed")
                 return False
         except:
-            stop_game, xp = self.stop_game(telegram_id=telegram_id)
+            stop_game, xp = self.stop_game(data=data)
             stop_status = stop_game.json()["data"]["status"]
             if stop_status:
                 self.log(f"{green}XP earned from Game: {yellow}{xp}")
@@ -207,6 +210,17 @@ class ArenaGames:
         now = datetime.now().isoformat(" ").split(".")[0]
         print(f"{black}[{now}]{reset} {msg}{reset}")
 
+    def get_id(self, query_id):
+        parsed_query = urllib.parse.parse_qs(query_id)
+
+        user_info = urllib.parse.unquote(parsed_query["user"][0])
+
+        user_dict = json.loads(user_info)
+
+        user_id = user_dict["id"]
+
+        return user_id
+
     def main(self):
         self.clear_terminal()
         print(self.banner)
@@ -216,13 +230,13 @@ class ArenaGames:
         self.log(f"{green}Numer of account: {white}{num_acc}")
         while True:
             end_at_list = []
-            for no, telegram_id in enumerate(data):
+            for no, data in enumerate(data):
                 self.log(self.line)
                 self.log(f"{green}Account number: {white}{no+1}/{num_acc}")
 
                 # Get user info
                 try:
-                    user_info = self.user_info(telegram_id=telegram_id).json()
+                    user_info = self.user_info(data=data).json()
                     user_name = user_info["data"]["first_name"]
                     balance = user_info["data"]["balance"]["$numberDecimal"]
                     end_at = float(user_info["data"]["farmEnd"]) / 1000
@@ -238,7 +252,7 @@ class ArenaGames:
 
                 # Do tasks
                 try:
-                    get_task = self.get_task(telegram_id=telegram_id).json()
+                    get_task = self.get_task(data=data).json()
                     tasks = get_task["data"]["docs"]
                     task_info = [
                         {
@@ -256,9 +270,9 @@ class ArenaGames:
                         for task in pending_tasks:
                             task_id = task["task_id"]
                             task_name = task["task_name"]
-                            result = self.do_task(
-                                telegram_id=telegram_id, task_id=task_id
-                            ).json()["data"]["status"]
+                            result = self.do_task(data=data, task_id=task_id).json()[
+                                "data"
+                            ]["status"]
                             self.log(
                                 f"{white}{task_name}: {yellow}Doing task... {white}Result: {yellow}{result}"
                             )
@@ -270,9 +284,9 @@ class ArenaGames:
                         for task in completed_tasks:
                             task_id = task["task_id"]
                             task_name = task["task_name"]
-                            result = self.claim_task(
-                                telegram_id=telegram_id, task_id=task_id
-                            ).json()["data"]["status"]
+                            result = self.claim_task(data=data, task_id=task_id).json()[
+                                "data"
+                            ]["status"]
                             print(
                                 f"{white}{task_name}: {yellow}Claiming task... {white}Result: {yellow}{result}"
                             )
@@ -291,7 +305,7 @@ class ArenaGames:
                 # Farm coin
                 try:
                     self.log(f"{yellow}Trying to farm coin...")
-                    farm_coin = self.farm_coin(telegram_id=telegram_id)
+                    farm_coin = self.farm_coin(data=data)
                     try:
                         if farm_coin.json()["statusCode"] == 400:
                             self.log(f"{yellow}Farm too early!")
@@ -300,7 +314,7 @@ class ArenaGames:
                     except:
                         pass
 
-                    user_info = self.user_info(telegram_id=telegram_id).json()
+                    user_info = self.user_info(data=data).json()
                     balance = user_info["data"]["balance"]["$numberDecimal"]
                     self.log(
                         f"{green}Current balance: {white}{round(float(balance), 2)}"
@@ -311,11 +325,13 @@ class ArenaGames:
                 # Get ref coin
                 try:
                     self.log(f"{yellow}Checking coin from refs...")
-                    check_ref_coin = self.check_ref_coin(telegram_id=telegram_id).json()
+                    check_ref_coin = self.check_ref_coin(data=data).json()
                     ref_coin = check_ref_coin["data"]["allCoin"]["$numberDecimal"]
                     if float(ref_coin) > 0:
-                        self.log(f"{yellow}Getting {round(float(ref_coin), 2)} XP from refs...")
-                        get_ref_coin = self.get_ref_coin(telegram_id=telegram_id).json()
+                        self.log(
+                            f"{yellow}Getting {round(float(ref_coin), 2)} XP from refs..."
+                        )
+                        get_ref_coin = self.get_ref_coin(data=data).json()
                         balance = get_ref_coin["data"]["balance"]["$numberDecimal"]
                         self.log(
                             f"{green}Balance after getting XP from refs: {white}{round(float(balance), 2)}"
@@ -328,14 +344,12 @@ class ArenaGames:
                 # Play game
                 try:
                     while True:
-                        attempts_left = self.attempts_left(
-                            telegram_id=telegram_id
-                        ).json()
+                        attempts_left = self.attempts_left(data=data).json()
                         game_left = attempts_left["data"]["quantity"]
                         self.log(f"{green}Game tickets: {white}{game_left}")
                         if int(game_left) > 0:
-                            self.play_game(telegram_id=telegram_id)
-                            user_info = self.user_info(telegram_id=telegram_id).json()
+                            self.play_game(data=data)
+                            user_info = self.user_info(data=data).json()
                             balance = user_info["data"]["balance"]["$numberDecimal"]
                             self.log(
                                 f"{green}Balance after Game: {white}{round(float(balance), 2)}"
