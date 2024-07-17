@@ -222,13 +222,13 @@ class ArenaGames:
         return user_id
 
     def main(self):
-        self.clear_terminal()
-        print(self.banner)
-        data = open(data_file, "r").read().splitlines()
-        num_acc = len(data)
-        self.log(self.line)
-        self.log(f"{green}Numer of account: {white}{num_acc}")
         while True:
+            self.clear_terminal()
+            print(self.banner)
+            data = open(data_file, "r").read().splitlines()
+            num_acc = len(data)
+            self.log(self.line)
+            self.log(f"{green}Numer of account: {white}{num_acc}")
             end_at_list = []
             for no, data in enumerate(data):
                 self.log(self.line)
